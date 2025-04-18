@@ -25,7 +25,6 @@ public class Main {
       } else if (HTTPRequest.startsWith("/echo/")) {
         op = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + (HTTPRequest.length()-6) + "\r\n\r\n" + HTTPRequest.substring(6);
       } else if (HTTPRequest.startsWith("/user-agent"))  {
-        reader.readLine();
         userAgent = reader.readLine().split(" ")[1];
         op = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + (userAgent.length()) + "\r\n\r\n" + userAgent;
       } else {

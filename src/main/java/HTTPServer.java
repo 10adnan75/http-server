@@ -67,11 +67,16 @@ public class HTTPServer {
 
                 HTTPResponse.Builder responseBuilder = new HTTPResponse.Builder()
                         .withResponseCode(ResponseCode.OK)
-                        .withContentType(ContentType.TEXT_PLAIN)
-                        .body(param);
+                        .withContentType(ContentType.TEXT_PLAIN);
 
                 if (clientAcceptsGzip) {
-                    responseBuilder.withContentEncoding("gzip");
+                    byte[] compressed = gzipCompress(param);
+                
+                    responseBuilder
+                        .withContentEncoding("gzip")
+                        .body(compressed);
+                } else {
+                    responseBuilder.body(param);
                 }
 
                 response = responseBuilder.build();

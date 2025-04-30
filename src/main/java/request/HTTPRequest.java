@@ -50,9 +50,13 @@ public class HTTPRequest {
 
         String line;
         Map<String, String> headers = new HashMap<>();
+
         while ((line = bufferedReader.readLine()) != null && !line.isEmpty()) {
-            String[] entry = line.split(" ");
-            headers.put(entry[0].replaceAll(":", ""), entry[1]);
+            String[] entry = line.split(":", 2);
+            
+            if (entry.length == 2) {
+                headers.put(entry[0].trim(), entry[1].trim());
+            }
         }
 
         String contentLengthHeader = headers.get("Content-Length");

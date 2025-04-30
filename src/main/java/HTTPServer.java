@@ -75,6 +75,7 @@ public class HTTPServer {
                     responseBuilder
                         .withContentEncoding("gzip")
                         .body(compressed);
+
                 } else {
                     responseBuilder.body(param);
                 }

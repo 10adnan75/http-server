@@ -11,10 +11,10 @@ public class Main {
             }
         }
 
-        if (args != null && directory == null) {
-            System.out.println("Directory not provided!");
-            return;
-        }
+        // if (directory == null) {
+        //     System.out.println("Directory not provided!");
+        //     return;
+        // }
 
         HTTPServer server = new HTTPServer(port, threads, directory);
         server.run();

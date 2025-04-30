@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import request.HTTPRequest;
+import request.Method;
 import response.ContentType;
 import response.HTTPResponse;
 import response.ResponseCode;
@@ -57,6 +58,20 @@ public class HTTPServer {
                         .withContentType(ContentType.TEXT_PLAIN)
                         .body(param)
                         .build();
+            } else if (request.getMethod() == Method.POST && request.getPath().startsWith("/files/")) {
+                String filename = request.getPath().substring("/files/".length());
+                File file = new File(directory, filename);
+
+                try (FileOutputStream fos = new FileOutputStream(file)) {
+                    fos.write(request.getBody().getBytes());
+                    response = new HTTPResponse.Builder()
+                            .withResponseCode(ResponseCode.CREATED)
+                            .build();
+                } catch (IOException e) {
+                    response = new HTTPResponse.Builder()
+                            .withResponseCode(ResponseCode.INTERNAL_SERVER_ERROR)
+                            .build();
+                }
             } else if (request.getPath().startsWith("/files/")) {
                 String filename = request.getPath().substring("/files/".length());
                 File file = new File(directory, filename);
@@ -70,20 +85,6 @@ public class HTTPServer {
                 } else {
                     response = new HTTPResponse.Builder()
                             .withResponseCode(ResponseCode.NOT_FOUND)
-                            .build();
-                }
-            } else if (request.getMethod().equals("POST") && request.getPath().startsWith("/files/")) {
-                String filename = request.getPath().substring("/files/".length());
-                File file = new File(directory, filename);
-            
-                try (FileOutputStream fos = new FileOutputStream(file)) {
-                    fos.write(request.getBody().getBytes());
-                    response = new HTTPResponse.Builder()
-                            .withResponseCode(ResponseCode.CREATED)
-                            .build();
-                } catch (IOException e) {
-                    response = new HTTPResponse.Builder()
-                            .withResponseCode(ResponseCode.INTERNAL_SERVER_ERROR)
                             .build();
                 }
             } else {

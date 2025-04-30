@@ -1,19 +1,16 @@
 public class Main {
     public static void main(String[] args) {
-        String directory = null;
 
-        for (int i = 0; i < args.length - 1; i++) {
-            if (args[i].equals("--directory")) {
-                directory = args[i + 1];
-            }
-        }
-
-        if (args != null && directory == null) {
+        if (args.length < 1) {
             System.out.println("Directory not provided!");
-            return;
+            System.exit(1);
         }
 
-        HTTPServer server = new HTTPServer(4221, 10, directory);
+        String directory = args[0]; 
+        int port = 4221;
+        int concurrency = 10;
+
+        HTTPServer server = new HTTPServer(port, concurrency, directory);
         server.run();
     }
 }

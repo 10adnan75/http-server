@@ -11,16 +11,19 @@ public class HTTPResponse {
     private final ResponseCode responseCode;
     private final ContentType contentType;
     private final String body;
+    private final String contentEncoding;
     private final byte[] rawBody;
 
     private HTTPResponse(
             final ResponseCode responseCode,
             final ContentType contentType,
             final String body,
+            final String contentEncoding,
             final byte[] rawBody) {
         this.responseCode = responseCode;
         this.contentType = contentType;
         this.body = body;
+        this.contentEncoding = contentEncoding;
         this.rawBody = rawBody;
     }
 
@@ -36,6 +39,11 @@ public class HTTPResponse {
 
         if (contentType != null) {
             outputStream.write(contentType.toString().getBytes(StandardCharsets.UTF_8));
+            outputStream.write(CRLF);
+        }
+
+        if (contentEncoding != null) {
+            outputStream.write(("Content-Encoding: " + contentEncoding).getBytes());
             outputStream.write(CRLF);
         }
 
@@ -62,6 +70,7 @@ public class HTTPResponse {
         private ResponseCode responseCode;
         private ContentType contentType = null;
         private String body = null;
+        private String contentEncoding = null;
         private byte[] rawBody = null;
 
         public Builder() {
@@ -82,6 +91,11 @@ public class HTTPResponse {
             return this;
         }
 
+        public Builder withContentEncoding(String encoding) {
+            this.contentEncoding = encoding;
+            return this;
+        }
+
         public Builder body(final byte[] rawBody) {
             this.rawBody = rawBody;
             return this;
@@ -96,6 +110,7 @@ public class HTTPResponse {
                     responseCode,
                     contentType,
                     body,
+                    contentEncoding,
                     rawBody);
         }
     }

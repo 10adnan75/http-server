@@ -4,6 +4,7 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.zip.GZIPOutputStream;
 import request.HTTPRequest;
 import request.Method;
 import response.ContentType;
@@ -41,6 +42,7 @@ public class HTTPServer {
                 final OutputStream outputStream = clientSocket.getOutputStream()) {
             final HTTPRequest request = HTTPRequest.from(bufferedReader);
             HTTPResponse response;
+
             if (request.getPath().equals("/")) {
                 response = new HTTPResponse.Builder()
                         .withResponseCode(ResponseCode.OK)
@@ -53,11 +55,19 @@ public class HTTPServer {
                         .build();
             } else if (request.getPath().contains("/echo/")) {
                 final String param = request.getPath().split("/echo/")[1];
-                response = new HTTPResponse.Builder()
+                String acceptEncoding = request.headers().getOrDefault("Accept-Encoding", "");
+                boolean clientAcceptsGzip = acceptEncoding.contains("gzip");
+
+                HTTPResponse.Builder responseBuilder = new HTTPResponse.Builder()
                         .withResponseCode(ResponseCode.OK)
                         .withContentType(ContentType.TEXT_PLAIN)
-                        .body(param)
-                        .build();
+                        .body(param);
+
+                if (clientAcceptsGzip) {
+                    responseBuilder.withContentEncoding("gzip");
+                }
+
+                response = responseBuilder.build();
             } else if (request.getMethod() == Method.POST && request.getPath().startsWith("/files/")) {
                 String filename = request.getPath().substring("/files/".length());
                 File file = new File(directory, filename);
@@ -75,6 +85,7 @@ public class HTTPServer {
             } else if (request.getPath().startsWith("/files/")) {
                 String filename = request.getPath().substring("/files/".length());
                 File file = new File(directory, filename);
+
                 if (file.exists()) {
                     byte[] fileBytes = Files.readAllBytes(file.toPath());
                     response = new HTTPResponse.Builder()
@@ -97,5 +108,15 @@ public class HTTPServer {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static byte[] gzipCompress(String input) throws IOException {
+        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+
+        try (GZIPOutputStream gzipStream = new GZIPOutputStream(byteStream)) {
+            gzipStream.write(input.getBytes());
+        }
+
+        return byteStream.toByteArray();
     }
 }

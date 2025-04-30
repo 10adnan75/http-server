@@ -40,84 +40,100 @@ public class HTTPServer {
         try (final BufferedReader bufferedReader = new BufferedReader(
                 new InputStreamReader(clientSocket.getInputStream()));
                 final OutputStream outputStream = clientSocket.getOutputStream()) {
-            final HTTPRequest request = HTTPRequest.from(bufferedReader);
-            HTTPResponse response;
+            while (!clientSocket.isClosed()) {
+                HTTPRequest request;
 
-            if (request.getPath().equals("/")) {
-                response = new HTTPResponse.Builder()
-                        .withResponseCode(ResponseCode.OK)
-                        .build();
-            } else if (request.getPath().equals("/user-agent")) {
-                response = new HTTPResponse.Builder()
-                        .withResponseCode(ResponseCode.OK)
-                        .withContentType(ContentType.TEXT_PLAIN)
-                        .body(request.headers().get("User-Agent"))
-                        .build();
-            } else if (request.getPath().contains("/echo/")) {
-                final String param = request.getPath().split("/echo/")[1];
-                String acceptEncoding = request.headers().getOrDefault("Accept-Encoding", "");
-                boolean clientAcceptsGzip = false;
-
-                for (String encoding : acceptEncoding.split(",")) {
-                    if (encoding.trim().equalsIgnoreCase("gzip")) {
-                        clientAcceptsGzip = true;
-                        break;
-                    }
+                try {
+                    request = HTTPRequest.from(bufferedReader);
+                } catch (IOException | NullPointerException e) {
+                    break;
                 }
 
-                HTTPResponse.Builder responseBuilder = new HTTPResponse.Builder()
-                        .withResponseCode(ResponseCode.OK)
-                        .withContentType(ContentType.TEXT_PLAIN);
+                HTTPResponse response;
 
-                if (clientAcceptsGzip) {
-                    byte[] compressed = gzipCompress(param);
-
-                    responseBuilder
-                            .withContentEncoding("gzip")
-                            .body(compressed);
-
-                } else {
-                    responseBuilder.body(param);
-                }
-
-                response = responseBuilder.build();
-            } else if (request.getMethod() == Method.POST && request.getPath().startsWith("/files/")) {
-                String filename = request.getPath().substring("/files/".length());
-                File file = new File(directory, filename);
-
-                try (FileOutputStream fos = new FileOutputStream(file)) {
-                    fos.write(request.getBody().getBytes());
-                    response = new HTTPResponse.Builder()
-                            .withResponseCode(ResponseCode.CREATED)
-                            .build();
-                } catch (IOException e) {
-                    response = new HTTPResponse.Builder()
-                            .withResponseCode(ResponseCode.INTERNAL_SERVER_ERROR)
-                            .build();
-                }
-            } else if (request.getPath().startsWith("/files/")) {
-                String filename = request.getPath().substring("/files/".length());
-                File file = new File(directory, filename);
-
-                if (file.exists()) {
-                    byte[] fileBytes = Files.readAllBytes(file.toPath());
+                if (request.getPath().equals("/")) {
                     response = new HTTPResponse.Builder()
                             .withResponseCode(ResponseCode.OK)
-                            .withContentType(ContentType.OCTET_STREAM)
-                            .body(fileBytes)
                             .build();
+                } else if (request.getPath().equals("/user-agent")) {
+                    response = new HTTPResponse.Builder()
+                            .withResponseCode(ResponseCode.OK)
+                            .withContentType(ContentType.TEXT_PLAIN)
+                            .body(request.headers().get("User-Agent"))
+                            .build();
+                } else if (request.getPath().contains("/echo/")) {
+                    final String param = request.getPath().split("/echo/")[1];
+                    String acceptEncoding = request.headers().getOrDefault("Accept-Encoding", "");
+                    boolean clientAcceptsGzip = false;
+
+                    for (String encoding : acceptEncoding.split(",")) {
+                        if (encoding.trim().equalsIgnoreCase("gzip")) {
+                            clientAcceptsGzip = true;
+                            break;
+                        }
+                    }
+
+                    HTTPResponse.Builder responseBuilder = new HTTPResponse.Builder()
+                            .withResponseCode(ResponseCode.OK)
+                            .withContentType(ContentType.TEXT_PLAIN);
+
+                    if (clientAcceptsGzip) {
+                        byte[] compressed = gzipCompress(param);
+
+                        responseBuilder
+                                .withContentEncoding("gzip")
+                                .body(compressed);
+
+                    } else {
+                        responseBuilder.body(param);
+                    }
+
+                    response = responseBuilder.build();
+                } else if (request.getMethod() == Method.POST && request.getPath().startsWith("/files/")) {
+                    String filename = request.getPath().substring("/files/".length());
+                    File file = new File(directory, filename);
+
+                    try (FileOutputStream fos = new FileOutputStream(file)) {
+                        fos.write(request.getBody().getBytes());
+                        response = new HTTPResponse.Builder()
+                                .withResponseCode(ResponseCode.CREATED)
+                                .build();
+                    } catch (IOException e) {
+                        response = new HTTPResponse.Builder()
+                                .withResponseCode(ResponseCode.INTERNAL_SERVER_ERROR)
+                                .build();
+                    }
+                } else if (request.getPath().startsWith("/files/")) {
+                    String filename = request.getPath().substring("/files/".length());
+                    File file = new File(directory, filename);
+
+                    if (file.exists()) {
+                        byte[] fileBytes = Files.readAllBytes(file.toPath());
+                        response = new HTTPResponse.Builder()
+                                .withResponseCode(ResponseCode.OK)
+                                .withContentType(ContentType.OCTET_STREAM)
+                                .body(fileBytes)
+                                .build();
+                    } else {
+                        response = new HTTPResponse.Builder()
+                                .withResponseCode(ResponseCode.NOT_FOUND)
+                                .build();
+                    }
                 } else {
                     response = new HTTPResponse.Builder()
                             .withResponseCode(ResponseCode.NOT_FOUND)
                             .build();
                 }
-            } else {
-                response = new HTTPResponse.Builder()
-                        .withResponseCode(ResponseCode.NOT_FOUND)
-                        .build();
+
+                outputStream.write(response.serialize());
+                outputStream.flush();
+
+                String connectionHeader = request.headers().getOrDefault("Connection", "");
+
+                if (connectionHeader.equalsIgnoreCase("close")) {
+                    break;
+                }
             }
-            outputStream.write(response.serialize());
-            outputStream.flush();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

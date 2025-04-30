@@ -60,7 +60,7 @@ public class HTTPServer {
             } else if (request.getPath().startsWith("/files/")) {
                 String filename = request.getPath().substring("/files/".length());
                 File file = new File(directory, filename);
-                if (file.exists() && file.isFile()) {
+                if (file.exists()) {
                     byte[] fileBytes = Files.readAllBytes(file.toPath());
                     response = new HTTPResponse.Builder()
                             .withResponseCode(ResponseCode.OK)

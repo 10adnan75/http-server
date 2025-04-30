@@ -2,6 +2,7 @@ package response;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 public class HTTPResponse {
 
@@ -10,14 +11,17 @@ public class HTTPResponse {
     private final ResponseCode responseCode;
     private final ContentType contentType;
     private final String body;
+    private final byte[] rawBody; 
 
     private HTTPResponse(
             final ResponseCode responseCode,
             final ContentType contentType,
-            final String body) {
+            final String body,
+            final byte[] rawBody) {
         this.responseCode = responseCode;
         this.contentType = contentType;
         this.body = body;
+        this.rawBody = rawBody;
     }
 
     @Override
@@ -27,19 +31,25 @@ public class HTTPResponse {
 
     public byte[] serialize() throws IOException {
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        outputStream.write(("HTTP/1.1 " + responseCode.toString()).getBytes());
+        outputStream.write(("HTTP/1.1 " + responseCode.toString()).getBytes(StandardCharsets.UTF_8));
         outputStream.write(CRLF);
 
         if (contentType != null) {
-            outputStream.write(contentType.toString().getBytes());
+            outputStream.write(contentType.toString().getBytes(StandardCharsets.UTF_8));
             outputStream.write(CRLF);
         }
 
-        if (body != null) {
-            outputStream.write(("Content-Length: " + body.length()).getBytes());
+        if (rawBody != null) {
+            outputStream.write(("Content-Length: " + rawBody.length).getBytes(StandardCharsets.UTF_8));
             outputStream.write(CRLF);
             outputStream.write(CRLF);
-            outputStream.write(body.getBytes());
+            outputStream.write(rawBody);
+        } else if (body != null) {
+            byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
+            outputStream.write(("Content-Length: " + bodyBytes.length).getBytes(StandardCharsets.UTF_8));
+            outputStream.write(CRLF);
+            outputStream.write(CRLF);
+            outputStream.write(bodyBytes);
         } else {
             outputStream.write(CRLF);
         }
@@ -52,9 +62,9 @@ public class HTTPResponse {
         private ResponseCode responseCode;
         private ContentType contentType = null;
         private String body = null;
+        private byte[] rawBody = null; 
 
         public Builder() {
-
         }
 
         public Builder withResponseCode(final ResponseCode responseCode) {
@@ -72,6 +82,11 @@ public class HTTPResponse {
             return this;
         }
 
+        public Builder body(final byte[] rawBody) {
+            this.rawBody = rawBody;
+            return this;
+        }
+
         public HTTPResponse build() {
             if (responseCode == null) {
                 throw new IllegalArgumentException("HTTPResponse must have a response code!\n");
@@ -80,7 +95,8 @@ public class HTTPResponse {
             return new HTTPResponse(
                     responseCode,
                     contentType,
-                    body);
+                    body,
+                    rawBody);
         }
     }
 }

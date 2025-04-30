@@ -74,6 +74,18 @@ public class HTTPResponse {
         return outputStream.toByteArray();
     }
 
+    public Builder toBuilder() {
+        Builder builder = new Builder()
+                .withResponseCode(this.responseCode)
+                .withContentType(this.contentType)
+                .withContentEncoding(this.contentEncoding)
+                .body(this.body);
+
+        this.additionalHeaders.forEach(builder::withHeader);
+
+        return builder;
+    }
+
     public static class Builder {
 
         private ResponseCode responseCode;

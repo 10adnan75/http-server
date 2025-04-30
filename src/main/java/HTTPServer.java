@@ -40,9 +40,7 @@ public class HTTPServer {
         try (final BufferedReader bufferedReader = new BufferedReader(
                 new InputStreamReader(clientSocket.getInputStream()));
                 final OutputStream outputStream = clientSocket.getOutputStream()) {
-            boolean keepAlive = true;
-
-            while (keepAlive && !clientSocket.isClosed()) {
+            while (!clientSocket.isClosed()) {
                 final HTTPRequest request;
                 boolean shouldClose;
 
@@ -53,17 +51,7 @@ public class HTTPServer {
                     break;
                 }
 
-                HTTPResponse.Builder builder = new HTTPResponse.Builder()
-                        .withResponseCode(ResponseCode.OK)
-                        .withContentType(ContentType.TEXT_PLAIN);
-
-                if (shouldClose) {
-                    builder.withContentEncoding(null);
-                    builder.body("Closing connection".getBytes());
-                    builder.withHeader("Connection", "close");
-                }
-
-                HTTPResponse response = builder.build();
+                HTTPResponse response;
 
                 String host = request.headers().getOrDefault("Host", "Unknown");
                 String userAgent = request.headers().getOrDefault("User-Agent", "Unknown");
@@ -132,7 +120,7 @@ public class HTTPServer {
 
                     if (file.exists()) {
                         byte[] fileBytes = Files.readAllBytes(file.toPath());
-                        
+
                         response = new HTTPResponse.Builder()
                                 .withResponseCode(ResponseCode.OK)
                                 .withContentType(ContentType.OCTET_STREAM)
@@ -162,9 +150,8 @@ public class HTTPServer {
                 }
 
                 if (shouldClose) {
-                    keepAlive = false;
+                    response = response.toBuilder().withHeader("Connection", "close").build();
                     clientSocket.close();
-                    break;
                 }
             }
         } catch (IOException e) {

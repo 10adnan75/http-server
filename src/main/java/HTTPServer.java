@@ -81,12 +81,6 @@ public class HTTPServer {
             outputStream.flush();
         } catch (IOException e) {
             throw new RuntimeException(e);
-        } finally {
-            try {
-                clientSocket.close();
-            } catch (IOException e) {
-                System.err.println("Failed to close client socket: " + e.getMessage());
-            }
         }
     }
 }

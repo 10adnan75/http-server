@@ -1,38 +1,77 @@
+
+# 🧠 Build Your Own HTTP Server (Java)
+
 [![progress-banner](https://backend.codecrafters.io/progress/http-server/0608a018-a0c9-441a-8db0-2ff432858d58)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
 
-This is a starting point for Java solutions to the
-["Build Your Own HTTP server" Challenge](https://app.codecrafters.io/courses/http-server/overview).
+This repository contains my Java implementation of a fully functional HTTP/1.1 server, built as part of the [Codecrafters "Build Your Own HTTP Server"](https://app.codecrafters.io/courses/http-server/overview) challenge.
 
-[HTTP](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol) is the
-protocol that powers the web. In this challenge, you'll build a HTTP/1.1 server
-that is capable of serving multiple clients.
+---
 
-Along the way you'll learn about TCP servers,
-[HTTP request syntax](https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html),
-and more.
+## 📦 Features Implemented
 
-**Note**: If you're viewing this repo on GitHub, head over to
-[codecrafters.io](https://codecrafters.io) to try the challenge.
+- ✅ HTTP/1.1 protocol parsing (requests and responses)
+- ✅ Persistent TCP connections with `Connection: keep-alive` and `Connection: close`
+- ✅ `/echo/<msg>` endpoint (returns plain text or gzip-compressed based on headers)
+- ✅ `/user-agent` endpoint (returns client's User-Agent)
+- ✅ `/files/<filename>` (supports GET and POST for file retrieval and storage)
+- ✅ Custom headers, status codes, and MIME types
+- ✅ Multithreaded request handling using a thread pool
 
-# Passing the first stage
+---
 
-The entry point for your HTTP server implementation is in
-`src/main/java/Main.java`. Study and uncomment the relevant code, and push your
-changes to pass the first stage:
+## 🛠️ How to Run
 
-```sh
-git commit -am "pass 1st stage" # any msg
-git push origin master
+### Prerequisites
+- Java 11+
+- Maven
+
+### Run the server
+```bash
+./your_program.sh
 ```
 
-Time to move on to the next stage!
+### Or using Maven directly:
+```bash
+mvn clean compile exec:java -Dexec.mainClass="Main"
+```
 
-# Stage 2 & beyond
+---
 
-Note: This section is for stages 2 and beyond.
+## 🧪 Test it manually (examples)
 
-1. Ensure you have `mvn` installed locally
-1. Run `./your_program.sh` to run your program, which is implemented in
-   `src/main/java/Main.java`.
-1. Commit your changes and run `git push origin master` to submit your solution
-   to CodeCrafters. Test output will be streamed to your terminal.
+```bash
+curl -v http://localhost:4221/
+curl -v http://localhost:4221/user-agent
+curl -v http://localhost:4221/echo/hello
+curl -v --header "Accept-Encoding: gzip" http://localhost:4221/echo/compressed
+curl -X POST --data "This is a file." http://localhost:4221/files/test.txt
+curl http://localhost:4221/files/test.txt
+```
+
+---
+
+## 📁 Project Structure
+
+- `HTTPServer.java` – Core server logic (multi-threaded socket handling, routing)
+- `HTTPRequest.java` – Request parsing (method, path, headers, body)
+- `HTTPResponse.java` – Response builder with status, headers, and body
+- `ContentType.java` – MIME type handling
+- `Main.java` – Entry point
+
+---
+
+## 🎯 Why This Project?
+
+This project was a deep dive into how real web servers work under the hood. It helped me learn:
+
+- Low-level networking with Java `Socket` APIs
+- HTTP request parsing and protocol rules
+- How headers, compression, and status codes work
+- Graceful connection handling and concurrency
+
+---
+
+## 📚 References
+
+- [HTTP/1.1 RFC 2616](https://www.w3.org/Protocols/rfc2616/rfc2616.html)
+- [Codecrafters.io - HTTP Server Challenge](https://app.codecrafters.io/courses/http-server)

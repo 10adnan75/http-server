@@ -91,8 +91,8 @@ public class HTTPResponse {
             return this;
         }
 
-        public Builder withContentEncoding(String encoding) {
-            this.contentEncoding = encoding;
+        public Builder withContentEncoding(String contentEncoding) {
+            this.contentEncoding = contentEncoding;
             return this;
         }
 

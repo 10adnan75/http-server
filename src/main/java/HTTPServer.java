@@ -56,7 +56,14 @@ public class HTTPServer {
             } else if (request.getPath().contains("/echo/")) {
                 final String param = request.getPath().split("/echo/")[1];
                 String acceptEncoding = request.headers().getOrDefault("Accept-Encoding", "");
-                boolean clientAcceptsGzip = acceptEncoding.contains("gzip");
+                boolean clientAcceptsGzip = false;
+
+                for (String encoding : acceptEncoding.split(",")) {
+                    if (encoding.trim().equalsIgnoreCase("gzip")) {
+                        clientAcceptsGzip = true;
+                        break;
+                    }
+                }
 
                 HTTPResponse.Builder responseBuilder = new HTTPResponse.Builder()
                         .withResponseCode(ResponseCode.OK)

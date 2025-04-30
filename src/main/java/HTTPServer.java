@@ -72,6 +72,20 @@ public class HTTPServer {
                             .withResponseCode(ResponseCode.NOT_FOUND)
                             .build();
                 }
+            } else if (request.getMethod().equals("POST") && request.getPath().startsWith("/files/")) {
+                String filename = request.getPath().substring("/files/".length());
+                File file = new File(directory, filename);
+            
+                try (FileOutputStream fos = new FileOutputStream(file)) {
+                    fos.write(request.getBody().getBytes());
+                    response = new HTTPResponse.Builder()
+                            .withResponseCode(ResponseCode.CREATED)
+                            .build();
+                } catch (IOException e) {
+                    response = new HTTPResponse.Builder()
+                            .withResponseCode(ResponseCode.INTERNAL_SERVER_ERROR)
+                            .build();
+                }
             } else {
                 response = new HTTPResponse.Builder()
                         .withResponseCode(ResponseCode.NOT_FOUND)

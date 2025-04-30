@@ -2,7 +2,9 @@ package response;
 
 public enum ResponseCode {
     OK(200, "OK"),
-    NOT_FOUND(404, "Not Found");
+    CREATED(201, "201 Created"),
+    NOT_FOUND(404, "Not Found"),
+    INTERNAL_SERVER_ERROR(500, "500 Internal Server Error");
 
     final int code;
     final String message;

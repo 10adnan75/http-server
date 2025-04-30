@@ -9,27 +9,39 @@ public class HTTPRequest {
 
     private final Method method;
     private final String path;
+    private final String body;
     private final Map<String, String> headers;
 
     private HTTPRequest(
             final Method method,
             final String path,
+            final String body,
             final Map<String, String> headers) {
         this.method = method;
         this.path = path;
+        this.body = body;
         this.headers = headers;
     }
 
+    public Method getMethod() {
+        return this.method;
+    }
+
+    public String getBody() {
+        return this.body;
+    }
+
     public String getPath() {
-        return path;
+        return this.path;
     }
 
     public Map<String, String> headers() {
-        return headers;
+        return this.headers;
     }
 
     public static HTTPRequest from(final BufferedReader bufferedReader) throws IOException {
         String[] parts = bufferedReader.readLine().split(" ");
+        
         Method method = switch (parts[0]) {
             case "GET" -> Method.GET;
             case "POST" -> Method.POST;
@@ -43,6 +55,16 @@ public class HTTPRequest {
             headers.put(entry[0].replaceAll(":", ""), entry[1]);
         }
 
-        return new HTTPRequest(method, parts[1], headers);
+        String contentLengthHeader = headers.get("Content-Length");
+        String body = null;
+
+        if (contentLengthHeader != null) {
+            int contentLength = Integer.parseInt(contentLengthHeader);
+            char[] bodyChars = new char[contentLength];
+            int read = bufferedReader.read(bodyChars, 0, contentLength);
+            body = new String(bodyChars, 0, read);
+        }
+
+        return new HTTPRequest(method, parts[1], body, headers);
     }
 }

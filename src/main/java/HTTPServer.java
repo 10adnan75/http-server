@@ -137,6 +137,10 @@ public class HTTPServer {
                             .build();
                 }
 
+                if (shouldClose) {
+                    response = response.toBuilder().withHeader("Connection", "close").build();
+                }
+
                 outputStream.write(response.serialize());
                 outputStream.flush();
 
@@ -150,8 +154,8 @@ public class HTTPServer {
                 }
 
                 if (shouldClose) {
-                    response = response.toBuilder().withHeader("Connection", "close").build();
                     clientSocket.close();
+                    break;
                 }
             }
         } catch (IOException e) {

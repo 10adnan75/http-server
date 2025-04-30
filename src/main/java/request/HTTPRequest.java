@@ -41,7 +41,7 @@ public class HTTPRequest {
 
     public static HTTPRequest from(final BufferedReader bufferedReader) throws IOException {
         String[] parts = bufferedReader.readLine().split(" ");
-        
+
         Method method = switch (parts[0]) {
             case "GET" -> Method.GET;
             case "POST" -> Method.POST;
@@ -53,7 +53,7 @@ public class HTTPRequest {
 
         while ((line = bufferedReader.readLine()) != null && !line.isEmpty()) {
             String[] entry = line.split(":", 2);
-            
+
             if (entry.length == 2) {
                 headers.put(entry[0].trim(), entry[1].trim());
             }

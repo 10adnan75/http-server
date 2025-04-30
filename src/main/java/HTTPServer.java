@@ -71,10 +71,10 @@ public class HTTPServer {
 
                 if (clientAcceptsGzip) {
                     byte[] compressed = gzipCompress(param);
-                
+
                     responseBuilder
-                        .withContentEncoding("gzip")
-                        .body(compressed);
+                            .withContentEncoding("gzip")
+                            .body(compressed);
 
                 } else {
                     responseBuilder.body(param);

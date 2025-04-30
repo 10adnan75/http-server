@@ -11,7 +11,7 @@ public class HTTPResponse {
     private final ResponseCode responseCode;
     private final ContentType contentType;
     private final String body;
-    private final byte[] rawBody; 
+    private final byte[] rawBody;
 
     private HTTPResponse(
             final ResponseCode responseCode,
@@ -62,7 +62,7 @@ public class HTTPResponse {
         private ResponseCode responseCode;
         private ContentType contentType = null;
         private String body = null;
-        private byte[] rawBody = null; 
+        private byte[] rawBody = null;
 
         public Builder() {
         }

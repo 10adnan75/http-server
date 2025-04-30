@@ -41,7 +41,7 @@ public class HTTPServer {
                 new InputStreamReader(clientSocket.getInputStream()));
                 final OutputStream outputStream = clientSocket.getOutputStream()) {
             while (!clientSocket.isClosed()) {
-                HTTPRequest request;
+                final HTTPRequest request;
 
                 try {
                     request = HTTPRequest.from(bufferedReader);
@@ -50,6 +50,15 @@ public class HTTPServer {
                 }
 
                 HTTPResponse response;
+
+                String host = request.headers().getOrDefault("Host", "Unknown");
+                String userAgent = request.headers().getOrDefault("User-Agent", "Unknown");
+                System.out.println("------------------------------------------");
+                System.out.println("CLIENT REQUEST\n");
+                System.out.println("1. HTTP: " + request);
+                System.out.println("2. HOST NAME: " + host);
+                System.out.println("3. USER AGENT: " + userAgent);
+                System.out.println("------------------------------------------");
 
                 if (request.getPath().equals("/")) {
                     response = new HTTPResponse.Builder()
@@ -127,6 +136,9 @@ public class HTTPServer {
 
                 outputStream.write(response.serialize());
                 outputStream.flush();
+
+                System.out.println("SERVER RESPONSE\n\n" + response);
+                System.out.println("------------------------------------------");
 
                 String connectionHeader = request.headers().getOrDefault("Connection", "");
 

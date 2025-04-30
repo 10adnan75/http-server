@@ -41,7 +41,7 @@ public class HTTPServer {
                 new InputStreamReader(clientSocket.getInputStream()));
                 final OutputStream outputStream = clientSocket.getOutputStream()) {
             boolean keepAlive = true;
-            
+
             while (keepAlive && !clientSocket.isClosed()) {
                 final HTTPRequest request;
                 boolean shouldClose;
@@ -54,8 +54,8 @@ public class HTTPServer {
                 }
 
                 HTTPResponse.Builder builder = new HTTPResponse.Builder()
-                    .withResponseCode(ResponseCode.OK)
-                    .withContentType(ContentType.TEXT_PLAIN);
+                        .withResponseCode(ResponseCode.OK)
+                        .withContentType(ContentType.TEXT_PLAIN);
 
                 if (shouldClose) {
                     builder.withContentEncoding(null);
@@ -67,12 +67,12 @@ public class HTTPServer {
 
                 String host = request.headers().getOrDefault("Host", "Unknown");
                 String userAgent = request.headers().getOrDefault("User-Agent", "Unknown");
-                System.out.println("------------------------------------------");
-                System.out.println("CLIENT REQUEST\n");
-                System.out.println("1. HTTP: " + request);
-                System.out.println("2. HOST NAME: " + host);
-                System.out.println("3. USER AGENT: " + userAgent);
-                System.out.println("------------------------------------------");
+                System.out.println("[INFO] ------------------------------------------------------------------------");
+                System.out.println("[INFO] CLIENT REQUEST\n");
+                System.out.println("[INFO] 1. HTTP: " + request);
+                System.out.println("[INFO] 2. HOST NAME: " + host);
+                System.out.println("[INFO] 3. USER AGENT: " + userAgent);
+                System.out.println("[INFO] ------------------------------------------------------------------------");
 
                 if (request.getPath().equals("/")) {
                     response = new HTTPResponse.Builder()
@@ -132,6 +132,7 @@ public class HTTPServer {
 
                     if (file.exists()) {
                         byte[] fileBytes = Files.readAllBytes(file.toPath());
+                        
                         response = new HTTPResponse.Builder()
                                 .withResponseCode(ResponseCode.OK)
                                 .withContentType(ContentType.OCTET_STREAM)
@@ -151,20 +152,20 @@ public class HTTPServer {
                 outputStream.write(response.serialize());
                 outputStream.flush();
 
-                System.out.println("SERVER RESPONSE\n\n" + response);
-                System.out.println("------------------------------------------");
+                System.out.println("[INFO] SERVER RESPONSE\n\n[INFO] " + response);
+                System.out.println("[INFO] ------------------------------------------------------------------------");
 
                 String connectionHeader = request.headers().getOrDefault("Connection", "");
-
-                if (shouldClose) {
-                    keepAlive = false;
-                }
 
                 if (connectionHeader.equalsIgnoreCase("close")) {
                     break;
                 }
 
-                clientSocket.close();
+                if (shouldClose) {
+                    keepAlive = false;
+                    clientSocket.close();
+                    break;
+                }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

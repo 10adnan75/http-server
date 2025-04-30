@@ -40,16 +40,30 @@ public class HTTPServer {
         try (final BufferedReader bufferedReader = new BufferedReader(
                 new InputStreamReader(clientSocket.getInputStream()));
                 final OutputStream outputStream = clientSocket.getOutputStream()) {
-            while (!clientSocket.isClosed()) {
+            boolean keepAlive = true;
+            
+            while (keepAlive && !clientSocket.isClosed()) {
                 final HTTPRequest request;
+                boolean shouldClose;
 
                 try {
                     request = HTTPRequest.from(bufferedReader);
+                    shouldClose = "close".equalsIgnoreCase(request.headers().get("Connection"));
                 } catch (IOException | NullPointerException e) {
                     break;
                 }
 
-                HTTPResponse response;
+                HTTPResponse.Builder builder = new HTTPResponse.Builder()
+                    .withResponseCode(ResponseCode.OK)
+                    .withContentType(ContentType.TEXT_PLAIN);
+
+                if (shouldClose) {
+                    builder.withContentEncoding(null);
+                    builder.body("Closing connection".getBytes());
+                    builder.withHeader("Connection", "close");
+                }
+
+                HTTPResponse response = builder.build();
 
                 String host = request.headers().getOrDefault("Host", "Unknown");
                 String userAgent = request.headers().getOrDefault("User-Agent", "Unknown");
@@ -142,9 +156,15 @@ public class HTTPServer {
 
                 String connectionHeader = request.headers().getOrDefault("Connection", "");
 
+                if (shouldClose) {
+                    keepAlive = false;
+                }
+
                 if (connectionHeader.equalsIgnoreCase("close")) {
                     break;
                 }
+
+                clientSocket.close();
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

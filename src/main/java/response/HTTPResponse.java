@@ -3,28 +3,32 @@ package response;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 public class HTTPResponse {
 
     private static final byte[] CRLF = "\r\n".getBytes();
-
     private final ResponseCode responseCode;
     private final ContentType contentType;
     private final String body;
     private final String contentEncoding;
     private final byte[] rawBody;
+    private final Map<String, String> additionalHeaders;
 
     private HTTPResponse(
             final ResponseCode responseCode,
             final ContentType contentType,
             final String body,
             final String contentEncoding,
-            final byte[] rawBody) {
+            final byte[] rawBody,
+            final Map<String, String> additionalHeaders) {
         this.responseCode = responseCode;
         this.contentType = contentType;
         this.body = body;
         this.contentEncoding = contentEncoding;
         this.rawBody = rawBody;
+        this.additionalHeaders = additionalHeaders;
     }
 
     @Override
@@ -44,6 +48,11 @@ public class HTTPResponse {
 
         if (contentEncoding != null) {
             outputStream.write(("Content-Encoding: " + contentEncoding).getBytes());
+            outputStream.write(CRLF);
+        }
+
+        for (Map.Entry<String, String> entry : additionalHeaders.entrySet()) {
+            outputStream.write((entry.getKey() + ": " + entry.getValue()).getBytes(StandardCharsets.UTF_8));
             outputStream.write(CRLF);
         }
 
@@ -72,6 +81,7 @@ public class HTTPResponse {
         private String body = null;
         private String contentEncoding = null;
         private byte[] rawBody = null;
+        private Map<String, String> additionalHeaders = new HashMap<>();
 
         public Builder() {
         }
@@ -101,6 +111,11 @@ public class HTTPResponse {
             return this;
         }
 
+        public Builder withHeader(String key, String value) {
+            this.additionalHeaders.put(key, value);
+            return this;
+        }
+
         public HTTPResponse build() {
             if (responseCode == null) {
                 throw new IllegalArgumentException("HTTPResponse must have a response code!\n");
@@ -111,7 +126,8 @@ public class HTTPResponse {
                     contentType,
                     body,
                     contentEncoding,
-                    rawBody);
+                    rawBody,
+                    additionalHeaders);
         }
     }
 }
